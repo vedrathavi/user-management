@@ -1,0 +1,46 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build output
+dist
+build
+coverage
+.turbo
+**/dist
+**/build
+**/coverage
+**/.nyc_output
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# environment files
+.env
+.env.*
+!.env.example
+
+# editor and OS files
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# temp files
+.temp
+.tmp
