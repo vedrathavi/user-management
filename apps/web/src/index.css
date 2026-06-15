@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+.btn:hover,
+a.button:hover {
+  cursor: pointer;
+}
+
+button:disabled,
+input[disabled] {
+  cursor: not-allowed;
+}
