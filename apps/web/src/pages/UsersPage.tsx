@@ -1,62 +1,106 @@
-import React from 'react'
+import React, { useEffect } from "react";
 import type { User } from "@repo/types";
-import { mockUsers } from "../data/mockUsers";
+// import { mockUsers } from "../data/mockUsers";
 import UserTable from "../components/UserTable";
 import { useState } from "react";
-import UserForm from '../components/UserForm';
-import type { UserFormData } from '../utils/userSchema';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { applyFilters } from '../utils/filters';
-import type { UserFilters } from '../utils/filters';
+import UserForm from "../components/UserForm";
+import type { UserFormData } from "../utils/userSchema";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { applyFilters } from "../utils/filters";
+import type { UserFilters } from "../utils/filters";
+import {
+  createUser,
+  deleteUser,
+  getUsers,
+  updateUser,
+} from "../services/users.api";
 
 const UsersPage = () => {
-  
-    const [user, setUsers] = useState<User[]>(mockUsers);
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const users = await getUsers();
+      setUsers(users);
+    } catch (err) {
+      setError("Failed to load users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<UserFilters>({});
 
-  const filteredUsers = applyFilters(user, filters);
+  const filteredUsers = applyFilters(users, filters);
 
-
-  // create handler - open form with empty fields 
-    const handleCreate = (data: UserFormData) => {
-        const newUser: User = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-        setUsers((prev) => [...prev, newUser]);
-        setIsFormOpen(false);
-    };
-    // open edit form with user data
-    const openEditForm = (user: User) => { setEditingUser(user); setIsFormOpen(true); };
-    
-    // edit handler - row wise
-    const handleEdit = (data: UserFormData) => {
-        if (!editingUser) return;
-        setIsFormOpen(true);
-        const updatedUser: User = { ...editingUser, ...data };
-        setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
-        setEditingUser(null);
-        setIsFormOpen(false);
-    };
-
-    // delete handler - row wise
-    const handleDelete = (id: string) => {
-        setDeleteUserId(id);
-        
-    };
-
-    // modal handlers
-    const confirmDelete = () => { 
-        if (!deleteUserId) return;
-
-        setUsers((prev) => prev.filter((u) => u.id !== deleteUserId));
-
-        setDeleteUserId(null);
+  // create handler - open form with empty fields
+  const handleCreate = async (data: UserFormData) => {
+    try {
+      await createUser(data);
+      await loadUsers();
+      setIsFormOpen(false);
+    } catch (err) {
+      alert((err as Error).message || "Failed to create user");
     }
-    const cancelDelete = () => {
+  };
+
+  // open edit form with user data
+  const openEditForm = (user: User) => {
+    setEditingUser(user);
+    setIsFormOpen(true);
+  };
+
+  // edit handler - row wise
+  const handleEdit = async (data: UserFormData) => {
+    if (!editingUser) return;
+    try {
+      await updateUser(editingUser.id, data);
+      await loadUsers();
+      setEditingUser(null);
+      setIsFormOpen(false);
+    } catch (err) {
+      alert((err as Error).message || "Failed to update user");
+    }
+  };
+
+  // delete handler - row wise
+  const handleDelete = (id: string) => {
+    setDeleteUserId(id);
+  };
+
+  // modal handlers
+  const confirmDelete = async () => {
+    if (!deleteUserId) return;
+    try {
+      await deleteUser(deleteUserId);
+      await loadUsers();
       setDeleteUserId(null);
-    };
+    } catch (err) {
+      alert((err as Error).message || "Failed to delete user");
+    }
+  };
+  const cancelDelete = () => {
+    setDeleteUserId(null);
+  };
+  if (loading) {
+    return <div>Loading users...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="w-full flex flex-col gap-1 mx-auto">
@@ -83,7 +127,7 @@ const UsersPage = () => {
             </span>{" "}
             of{" "}
             <span className="font-semibold  text-neutral-200">
-              {user.length}
+              {users.length}
             </span>{" "}
             users{" "}
           </p>
@@ -136,6 +180,6 @@ const UsersPage = () => {
       </div>
     </div>
   );
-}
+};
 
-export default UsersPage
+export default UsersPage;
