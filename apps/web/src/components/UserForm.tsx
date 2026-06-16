@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-// import type { User } from "@repo/types";
 import UserSchema, { type UserFormData } from "../utils/userSchema";
+import { X, User, Mail, Phone, Briefcase, Info, BadgeAlert } from "lucide-react";
 
 interface Props {
-    user?: UserFormData | null;
+  user?: UserFormData | null;
   onSubmit: (data: UserFormData) => void;
   onClose: () => void;
 }
@@ -16,7 +16,7 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<UserFormData>({ resolver: zodResolver(UserSchema), });
+  } = useForm<UserFormData>({ resolver: zodResolver(UserSchema) });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -28,114 +28,158 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [reset, onClose]);
-    
-    useEffect(() => {
-      reset(user ?? undefined);
-    }, [user, reset]);
+
+  useEffect(() => {
+    reset(user ?? undefined);
+  }, [user, reset]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300"
         onClick={() => {
           reset();
           onClose();
         }}
       />
+
+      {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-xl"
+        className="relative z-10 w-full max-w-2xl rounded-3xl border border-neutral-800 bg-neutral-950/90 p-6 md:p-8 shadow-2xl backdrop-blur-md transition-all duration-300 scale-100"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-full max-w-xl bg-neutral-900 p-2 rounded-4xl gap-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-neutral-800/60 pb-4 mb-6">
+          <h2 className="text-xl font-bold text-neutral-100 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+            {user ? "Edit User Account" : "Add New User Account"}
+          </h2>
           <button
-            className="self-end text-red-500 hover:text-red-600 "
+            className="rounded-lg p-1.5 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-900 border border-transparent hover:border-neutral-800 transition-all duration-150 cursor-pointer"
             onClick={() => {
               reset();
               onClose();
             }}
           >
-            Close
-                  </button>
-                  
-          <div>
-            <h2 className="text-lg  mb-4 text-center">{user ? "Edit User" : "Add New User"}</h2>
-                  </div>
-                  
+            <X size={16} />
+          </button>
+        </div>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="w-full bg-neutral-900 px-4 mb-4 rounded-4xl gap-4 flex flex-col"
-          >
-            <div>
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* First Name */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <User size={12} />
+                <span>First Name</span>
+              </label>
               <input
                 type="text"
-                placeholder="First Name"
+                placeholder="John"
                 {...register("firstName")}
-                className="w-full mb-2 p-3 bg-neutral-800 text-neutral-100 rounded-lg"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               />
               {errors.firstName && (
-                <p className="text-sm text-red-500">
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
                   {errors.firstName.message}
                 </p>
               )}
             </div>
 
-            <div>
+            {/* Last Name */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <User size={12} />
+                <span>Last Name</span>
+              </label>
               <input
                 type="text"
-                placeholder="Last Name"
+                placeholder="Doe"
                 {...register("lastName")}
-                className="w-full mb-2 p-3 bg-neutral-800 text-neutral-100 rounded-lg"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               />
               {errors.lastName && (
-                <p className="text-sm text-red-500">
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
                   {errors.lastName.message}
                 </p>
               )}
             </div>
 
-            <div>
+            {/* Email */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <Mail size={12} />
+                <span>Email Address</span>
+              </label>
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="john.doe@example.com"
                 {...register("email")}
-                className="w-full mb-2 p-3 bg-neutral-800 text-neutral-100 rounded-lg"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               />
               {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
-            <div>
+            {/* Phone */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <Phone size={12} />
+                <span>Phone Number (Optional)</span>
+              </label>
               <input
                 type="text"
-                placeholder="Phone (optional)"
+                placeholder="e.g. 555-0199"
                 {...register("phone")}
-                className="w-full mb-2 p-3 bg-neutral-800 text-neutral-100 rounded-lg"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               />
               {errors.phone && (
-                <p className="text-sm text-red-500">{errors.phone.message}</p>
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
+                  {errors.phone.message}
+                </p>
               )}
             </div>
 
-            <div>
+            {/* Status */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <Info size={12} />
+                <span>Account Status</span>
+              </label>
               <select
                 {...register("status")}
-                className="w-full mb-2 p-3 rounded-lg bg-neutral-800 text-neutral-100"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               >
                 <option value="">Select Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
               {errors.status && (
-                <p className="text-sm text-red-500">{errors.status.message}</p>
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
+                  {errors.status.message}
+                </p>
               )}
             </div>
 
-            <div>
+            {/* Role */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <Info size={12} />
+                <span>System Role</span>
+              </label>
               <select
                 {...register("role")}
-                className="w-full mb-2 p-3 rounded-lg bg-neutral-800 text-neutral-100"
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
               >
                 <option value="">Select Role</option>
                 <option value="admin">Admin</option>
@@ -143,43 +187,53 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
                 <option value="viewer">Viewer</option>
               </select>
               {errors.role && (
-                <p className="text-sm text-red-500">{errors.role.message}</p>
-              )}
-            </div>
-
-            <div>
-              <input
-                type="text"
-                placeholder="Department (optional)"
-                {...register("department")}
-                className="w-full mb-2 p-3 rounded-lg bg-neutral-800 text-neutral-100"
-              />
-              {errors.department && (
-                <p className="text-sm text-red-500">
-                  {errors.department.message}
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
+                  {errors.role.message}
                 </p>
               )}
             </div>
 
-            <div className="w-full flex gap-4">
-              <button
-                type="submit"
-                className="w-full bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-semibold py-4 px-4 rounded-xl"
-              >
-                Submit
-              </button>
-              <button
-                type="button"
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-4 px-4 rounded-xl"
-                onClick={() => {
-                  reset();
-                }}
-              >
-                Clear
-              </button>
+            {/* Department */}
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
+                <Briefcase size={12} />
+                <span>Department Name (Optional)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Engineering, Sales"
+                {...register("department")}
+                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+              />
+              {errors.department && (
+                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
+                  <BadgeAlert size={10} />
+                  {errors.department.message}
+                </p>
+              )}
             </div>
-          </form>
-        </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-neutral-800/60">
+            <button
+              type="button"
+              className="rounded-xl border border-neutral-850 bg-neutral-900 hover:bg-neutral-800 hover:text-neutral-100 text-neutral-300 font-semibold px-5 py-2.5 text-xs transition-all duration-150 cursor-pointer"
+              onClick={() => {
+                reset();
+              }}
+            >
+              Clear Form
+            </button>
+            <button
+              type="submit"
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold px-6 py-2.5 text-xs transition-all duration-150 shadow-md shadow-indigo-500/10 cursor-pointer"
+            >
+              {user ? "Save Changes" : "Create Account"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

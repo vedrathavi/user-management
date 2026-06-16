@@ -13,8 +13,17 @@ export class FilterValuesDto {
   @IsString()
   field: string;
 
+  @IsOptional()
   @IsArray()
-  values: string[];
+  values?: string[];
+
+  @IsOptional()
+  @IsString()
+  operator?: string;
+
+  @IsOptional()
+  @IsString()
+  value?: string;
 }
 
 export class SortDto {

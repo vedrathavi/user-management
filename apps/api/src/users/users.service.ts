@@ -73,12 +73,66 @@ export class UsersService {
   ) {
     if (!filters) return;
 
-    filters.forEach((filter) => {
+    filters.forEach((filter, index) => {
       if (filter.field === excludeField) return;
-      if (filter.values && filter.values.length > 0) {
-        qb.andWhere(`user.${filter.field} IN (:...values_${filter.field})`, {
-          [`values_${filter.field}`]: filter.values,
-        });
+
+      const paramName = `val_${filter.field}_${index}`;
+
+      if (filter.operator) {
+        switch (filter.operator) {
+          case 'equals':
+            qb.andWhere(`LOWER(user.${filter.field}) = LOWER(:${paramName})`, {
+              [paramName]: filter.value,
+            });
+            break;
+          case 'notEquals':
+            qb.andWhere(`LOWER(user.${filter.field}) != LOWER(:${paramName}) OR user.${filter.field} IS NULL`, {
+              [paramName]: filter.value,
+            });
+            break;
+          case 'contains':
+            qb.andWhere(`LOWER(user.${filter.field}) LIKE LOWER(:${paramName})`, {
+              [paramName]: `%${filter.value}%`,
+            });
+            break;
+          case 'notContains':
+            qb.andWhere(`LOWER(user.${filter.field}) NOT LIKE LOWER(:${paramName}) OR user.${filter.field} IS NULL`, {
+              [paramName]: `%${filter.value}%`,
+            });
+            break;
+          case 'startsWith':
+            qb.andWhere(`LOWER(user.${filter.field}) LIKE LOWER(:${paramName})`, {
+              [paramName]: `${filter.value}%`,
+            });
+            break;
+          case 'endsWith':
+            qb.andWhere(`LOWER(user.${filter.field}) LIKE LOWER(:${paramName})`, {
+              [paramName]: `%${filter.value}`,
+            });
+            break;
+          case 'gte':
+            qb.andWhere(`user.${filter.field} >= :${paramName}`, {
+              [paramName]: new Date(filter.value || ''),
+            });
+            break;
+          case 'lte':
+            const lteDate = new Date(filter.value || '');
+            lteDate.setHours(23, 59, 59, 999);
+            qb.andWhere(`user.${filter.field} <= :${paramName}`, {
+              [paramName]: lteDate,
+            });
+            break;
+        }
+      } else if (filter.values && filter.values.length > 0) {
+        if (filter.field === 'createdAt') {
+          qb.andWhere(`TO_CHAR(user.createdAt, 'YYYY-MM-DD') IN (:...values_${filter.field})`, {
+            [`values_${filter.field}`]: filter.values,
+          });
+        } else {
+          qb.andWhere(`user.${filter.field} IN (:...values_${filter.field})`, {
+            [`values_${filter.field}`]: filter.values,
+          });
+        }
       }
     });
   }
@@ -94,13 +148,18 @@ export class UsersService {
       'status',
       'department',
       'phone',
+      'createdAt',
     ];
 
     const result: Record<string, string[]> = {};
 
     const promises = filterableFields.map(async (field) => {
       const qb = this.userRepository.createQueryBuilder('user');
-      qb.select(`DISTINCT user.${field}`, 'value')
+      const selectExpr = field === 'createdAt'
+        ? `DISTINCT TO_CHAR(user.createdAt, 'YYYY-MM-DD')`
+        : `DISTINCT user.${field}`;
+
+      qb.select(selectExpr, 'value')
         .where(`user.${field} IS NOT NULL`);
 
       this.applyFilters(qb, filters, field);

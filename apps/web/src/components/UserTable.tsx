@@ -2,6 +2,7 @@ import type { User } from "@repo/types";
 import type { FilterValuesDto } from "../utils/filters";
 import { useState } from "react";
 import FilterMenu from "./FilterMenu";
+import { Filter, Edit, Trash2 } from "lucide-react";
 
 interface Props {
   users: User[];
@@ -10,6 +11,8 @@ interface Props {
   onValueToggle: (field: string, value: string) => void;
   onSelectAll: (field: string, allValues: string[]) => void;
   onClearAll: (field: string) => void;
+  onOperatorApply: (field: string, operator: string, value: string) => void;
+  onOperatorClear: (field: string, operator?: string) => void;
   onEdit?: (user: User) => void;
   onDelete?: (id: string) => void;
   onSort?: (field: string) => void;
@@ -23,6 +26,8 @@ const UserTable = ({
   onValueToggle,
   onSelectAll,
   onClearAll,
+  onOperatorApply,
+  onOperatorClear,
   onEdit,
   onDelete,
   onSort,
@@ -34,28 +39,72 @@ const UserTable = ({
     return selectedFilters.find((filter) => filter.field === field)?.values ?? [];
   };
 
+  const renderRoleBadge = (role: string) => {
+    switch (role) {
+      case "admin":
+        return (
+          <span className="inline-flex items-center rounded-md bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-400 border border-purple-500/20">
+            Admin
+          </span>
+        );
+      case "editor":
+        return (
+          <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-0.5 text-xs font-semibold text-blue-400 border border-blue-500/20">
+            Editor
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center rounded-md bg-neutral-500/10 px-2 py-0.5 text-xs font-semibold text-neutral-400 border border-neutral-800">
+            Viewer
+          </span>
+        );
+    }
+  };
+
+  const renderStatusPill = (status: string) => {
+    const isActive = status === "active";
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold border ${
+          isActive
+            ? "bg-green-500/10 text-green-400 border-green-500/20"
+            : "bg-red-500/10 text-red-400 border-red-500/20"
+        }`}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isActive ? "bg-green-400 animate-pulse" : "bg-red-400"
+          }`}
+        />
+        <span className="capitalize">{status}</span>
+      </span>
+    );
+  };
+
   const renderFilterableHeader = (label: string, field: string) => {
     const selectedValues = getSelectedValues(field);
-    const isFiltered = selectedValues.length > 0;
+    const hasOperatorFilter = selectedFilters.some((f) => f.field === field && f.operator);
+    const isFiltered = selectedValues.length > 0 || hasOperatorFilter;
     const options = filterOptions[field] ?? [];
 
     return (
-      <th className="relative border border-neutral-800 p-2">
-        <div className="flex items-center justify-between gap-1 px-1">
+      <th className="relative border border-neutral-800 p-2.5 text-xs font-semibold text-neutral-300">
+        <div className="flex items-center justify-between gap-2 px-1">
           <span
-            className={`font-semibold transition-colors duration-200 ${
-              isFiltered ? "text-blue-400" : "text-neutral-200"
+            className={`transition-colors duration-200 ${
+              isFiltered ? "text-blue-400 font-bold" : "text-neutral-300"
             }`}
           >
             {label}
           </span>
           <button
-            className={`cursor-pointer rounded p-1 transition-all duration-200 hover:bg-neutral-800 ${
-              isFiltered ? "text-blue-400 font-bold" : "text-neutral-500"
+            className={`cursor-pointer rounded-lg p-1 transition-all duration-200 hover:bg-neutral-800 ${
+              isFiltered ? "text-blue-400 bg-blue-500/10 border border-blue-500/20" : "text-neutral-500"
             }`}
             onClick={() => setOpenFilters(openFilters === field ? null : field)}
           >
-            {isFiltered ? "☑" : "⬇️"}
+            <Filter size={11} className={isFiltered ? "fill-blue-500/10" : ""} />
           </button>
         </div>
 
@@ -66,6 +115,9 @@ const UserTable = ({
           onToggle={onValueToggle}
           onSelectAll={onSelectAll}
           onClearAll={onClearAll}
+          selectedFilters={selectedFilters}
+          onOperatorApply={onOperatorApply}
+          onOperatorClear={onOperatorClear}
           isOpen={openFilters === field}
           onClose={() => setOpenFilters(null)}
           onSort={onSort}
@@ -76,108 +128,102 @@ const UserTable = ({
   };
 
   return (
-    <table className="w-full table-auto border-collapse border-neutral-800 text-center">
-      <thead>
-        <tr className="bg-neutral-900/60">
-          <th className="border border-neutral-800 py-2 px-1 text-sm font-semibold text-neutral-200">
-            Sr. No.
-          </th>
-
-          <th className="border border-neutral-800 p-2">
-            <button
-              onClick={() => onSort?.("createdAt")}
-              className="flex cursor-pointer items-center justify-center gap-1 w-full font-semibold text-neutral-200 hover:text-blue-400 transition-colors duration-200"
-            >
-              <span>Created At</span>
-              {sort?.field === "createdAt" && (
-                <span className="text-blue-400 font-bold">
-                  {sort.order === "ASC" ? " ↑" : " ↓"}
-                </span>
-              )}
-            </button>
-          </th>
-
-          {renderFilterableHeader("First Name", "firstName")}
-          {renderFilterableHeader("Last Name", "lastName")}
-          {renderFilterableHeader("Email", "email")}
-          {renderFilterableHeader("Phone", "phone")}
-          {renderFilterableHeader("Role", "role")}
-          {renderFilterableHeader("Status", "status")}
-          {renderFilterableHeader("Department", "department")}
-
-          <th className="border border-neutral-800 p-2 font-semibold text-neutral-200">
-            Actions
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {users.map((user, index) => (
-          <tr key={user.id} className="hover:bg-neutral-800/20 transition-colors duration-150">
-            <td className="border border-neutral-800 px-1 py-2 text-neutral-300">
-              {index + 1}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {new Date(user.createdAt).toLocaleDateString()}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.firstName}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.lastName}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.email}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.phone || "N/A"}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.role}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.status}
-            </td>
-            <td className="border border-neutral-800 p-2 text-neutral-300">
-              {user.department || "N/A"}
-            </td>
-            <td className="border border-neutral-800 p-2">
-              {/* Edit Button */}
-              <button
-                className="bg-neutral-200 hover:bg-neutral-300 text-neutral-800 font-semibold py-1.5 px-3 rounded text-sm transition-all duration-150"
-                onClick={() => {
-                  if (onEdit) onEdit(user);
-                }}
-              >
-                Edit
-              </button>
-              {/* Delete Button */}
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded ml-2 text-sm transition-all duration-150"
-                onClick={() => {
-                  if (onDelete) onDelete(user.id);
-                }}
-              >
-                Delete
-              </button>
-            </td>
+    <div className="w-full overflow-x-auto rounded-xl border border-neutral-800 bg-neutral-950/20 scrollbar-thin scrollbar-thumb-neutral-800 scrollbar-track-transparent">
+      <table className="w-full table-auto border-collapse text-left text-sm">
+        <thead>
+          <tr className="bg-neutral-900/40 border-b border-neutral-800 text-[11px] uppercase tracking-wider text-neutral-400">
+            <th className="border-b border-neutral-800 py-3 px-3 font-semibold text-neutral-400 text-center w-14">
+              Sr. No.
+            </th>
+            {renderFilterableHeader("Created At", "createdAt")}
+            {renderFilterableHeader("First Name", "firstName")}
+            {renderFilterableHeader("Last Name", "lastName")}
+            {renderFilterableHeader("Email", "email")}
+            {renderFilterableHeader("Phone", "phone")}
+            {renderFilterableHeader("Role", "role")}
+            {renderFilterableHeader("Status", "status")}
+            {renderFilterableHeader("Department", "department")}
+            <th className="border-b border-neutral-800 p-2.5 font-semibold text-neutral-400 text-center w-24">
+              Actions
+            </th>
           </tr>
-        ))}
+        </thead>
 
-        {users.length === 0 && (
-          <tr>
-            <td
-              colSpan={10}
-              className="border border-neutral-800 p-4 text-center text-neutral-400"
-            >
-              No users found.
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
+        <tbody className="divide-y divide-neutral-800/60">
+          {users.map((user, index) => (
+            <tr key={user.id} className="hover:bg-neutral-800/10 transition-colors duration-150">
+              <td className="py-2.5 px-3 text-neutral-400 text-center text-xs">
+                {index + 1}
+              </td>
+              <td className="p-2.5 text-neutral-300 text-xs">
+                {new Date(user.createdAt).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}
+              </td>
+              <td className="p-2.5 text-neutral-200 font-medium text-xs">
+                {user.firstName}
+              </td>
+              <td className="p-2.5 text-neutral-200 font-medium text-xs">
+                {user.lastName}
+              </td>
+              <td className="p-2.5 text-neutral-300 text-xs truncate max-w-[150px]" title={user.email}>
+                {user.email}
+              </td>
+              <td className="p-2.5 text-neutral-400 text-xs">
+                {user.phone || "—"}
+              </td>
+              <td className="p-2.5 text-xs">
+                {renderRoleBadge(user.role)}
+              </td>
+              <td className="p-2.5 text-xs">
+                {renderStatusPill(user.status)}
+              </td>
+              <td className="p-2.5 text-neutral-300 text-xs">
+                {user.department || "—"}
+              </td>
+              <td className="p-2.5 text-center">
+                <div className="flex items-center justify-center gap-1.5">
+                  {/* Edit Button */}
+                  <button
+                    className="p-2 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-150 cursor-pointer"
+                    onClick={() => {
+                      if (onEdit) onEdit(user);
+                    }}
+                    title="Edit User"
+                  >
+                    <Edit size={12} />
+                  </button>
+                  {/* Delete Button */}
+                  <button
+                    className="p-2 rounded-lg bg-red-950/10 border border-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-950/20 hover:border-red-900/40 transition-all duration-150 cursor-pointer"
+                    onClick={() => {
+                      if (onDelete) onDelete(user.id);
+                    }}
+                    title="Delete User"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+
+          {users.length === 0 && (
+            <tr>
+              <td
+                colSpan={10}
+                className="py-12 text-center text-xs text-neutral-500"
+              >
+                No users found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
 export default UserTable;
-
