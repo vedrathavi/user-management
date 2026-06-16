@@ -1,5 +1,6 @@
 import type { User } from "@repo/types";
 import type { UserFormData } from "../utils/userSchema";
+import type { SearchUsersRequest, SearchUsersResponse } from "../utils/filters";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/users";
 
@@ -66,3 +67,21 @@ export const deleteUser = async (id: string): Promise<{ message: string }> => {
 
   return response.json();
 };
+
+
+export const searchUsers = async (payload: SearchUsersRequest): Promise<SearchUsersResponse> => { 
+  const response = await fetch(`${API_URL}/search`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  console.log("Search Users Payload:", payload);
+  if (!response.ok) {
+    console.error("Search Users Error Response:", response);
+    throw new Error(await getErrorMessage(response, "Failed to search users"));
+  }
+  return response.json();
+}

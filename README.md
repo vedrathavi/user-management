@@ -20,28 +20,28 @@ The project is centered around managing users with a table-driven UI and a REST 
 
 ### Web App
 
-The frontend is already built as a working user dashboard, but it currently runs against local mock state rather than calling the API.
+The frontend is a fully-featured user management dashboard that communicates directly with the NestJS backend API.
 
-- User list rendered in a table with 30 generated mock users.
-- Add and edit user modal with form validation.
-- Delete confirmation dialog before removing a user.
-- Column-level filtering for first name, last name, email, phone, department, and created date.
-- Role and status filtering support through the shared filter model.
-- Shared UI pieces such as `UserTable`, `UserForm`, `FilterMenu`, and `ConfirmDialog`.
-- Mock dataset generation using `@faker-js/faker`.
+- **User Listing & Pagination**: Displays users retrieved from the Postgres database.
+- **Dynamic Sorting & Pagination**: Sort by columns and paginated navigation.
+- **Create, Edit & Delete**: Modals with form validation and confirmation dialogs.
+- **Excel-Style Column Filtering**: Every column header (First Name, Last Name, Email, Phone, Role, Status, Department) features a dropdown filter menu that supports:
+  - **Dynamic Dropdown Options**: Fetched dynamically from database distinct values.
+  - **Cascading Options**: Filter dropdowns automatically narrow down based on active filters on other columns.
+  - **Select All / Clear All**: Easy batch checking/unchecking.
+  - **Search inside filter**: Sub-string filtering of the dropdown option list locally.
+- **Shared UI Components**: `UserTable`, `UserForm`, `FilterMenu`, and `ConfirmDialog`.
 
 ### API
 
-The backend is already wired for database-backed user management.
+The NestJS backend API handles persistence, query building, and dynamic metadata generation.
 
-- `GET /users` to list users.
-- `GET /users/:id` to fetch one user.
-- `POST /users` to create a user.
-- `PATCH /users/:id` to update a user.
-- `DELETE /users/:id` to remove a user.
-- Unique email handling with a conflict response.
-- Postgres connection configured through NestJS Config and TypeORM.
-- Shared validation DTOs for create and update flows.
+- **`POST /users/search`**: Main search, pagination, and sorting endpoint that also compiles dynamic, cascading filter options for all columns.
+- **`GET /users/:id`**: Fetch single user.
+- **`POST /users`**: Create user with unique email constraint checking.
+- **`PATCH /users/:id`**: Update user details.
+- **`DELETE /users/:id`**: Delete user record.
+- **Postgres Integration**: Persistence backed by TypeORM and PostgreSQL.
 
 ### Shared Types
 
@@ -121,30 +121,25 @@ Starts only the API.
 
 ## What This Repo Does Right Now
 
-- Web app (`apps/web`):
-	- User management UI built with React + Vite + Tailwind.
-	- Users list with pagination-style mock dataset (30 generated users).
-	- Create / Edit user modal form using `react-hook-form` + `zod` validation.
-	- Delete with confirmation dialog.
-	- Column-level filtering (first name, last name, email, department, phone) with operators: `contains`, `equals`, `startsWith`, `endsWith`.
-	- Mock data from `apps/web/src/data/mockUsers.ts` using `@faker-js/faker`.
-	- UI components include `UserTable`, `UserForm`, `FilterMenu`, and `ConfirmDialog`.
+- **Web app (`apps/web`)**:
+	- React, Vite, and Tailwind-based dashboard.
+	- Connects to the NestJS API for server-side state (listing, creating, editing, and deleting users).
+	- Excel-style multi-select column filtering with local search, Select All, and cascading dropdown values.
+	- Client-side form validation with `react-hook-form` and `zod`.
 
-- API (`apps/api`):
-	- NestJS skeleton service and server configuration.
-	- No database wired yet — currently serves as a placeholder for future API endpoints.
+- **API (`apps/api`)**:
+	- NestJS backend with full PostgreSQL integration via TypeORM.
+	- Houses endpoints for search/filtering, creating, updating, and deleting users.
+	- Implements dynamic query building for SQL-level filtering and cascading distinct options extraction.
 
-- Packages:
-	- `packages/types` contains shared TypeScript types used across the monorepo (e.g. `User`, `UserRoles`, `UserStatus`).
+- **Packages**:
+	- `packages/types` contains shared TypeScript types (`User`, `UserRoles`, `UserStatus`).
 
 ## Quick Feature Map
 
-- Users page: `apps/web/src/pages/UsersPage.tsx` — combines the mock dataset, table, form, and filter logic.
-- Filtering logic: `apps/web/src/utils/filters.ts` — provides `applyFilters` and the `UserFilters` type.
-- Form validation/schema: `apps/web/src/utils/userSchema.ts` — Zod schema and `UserFormData` type.
-- Mock dataset: `apps/web/src/data/mockUsers.ts`.
-
-There are no server-side persistence layers or external integrations configured yet.
+- Users page: `apps/web/src/pages/UsersPage.tsx` — manages table query state (page, sorting, filters) and orchestrates API calls.
+- Web filtering definitions: `apps/web/src/utils/filters.ts` — contains frontend types for search requests/responses.
+- Form validation/schema: `apps/web/src/utils/userSchema.ts` — Zod schema for validation.
 
 ## Where the Wiring Lives
 
