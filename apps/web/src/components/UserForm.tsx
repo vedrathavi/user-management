@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import UserSchema, { type UserFormData } from "../utils/userSchema";
-import { X, User as UserIcon, Mail, Phone, Briefcase, Info, BadgeAlert } from "lucide-react";
 import type { User } from "@repo/types";
 import { useAuth } from "../context/AuthContext";
 
@@ -28,44 +27,14 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
   const renderStatusPill = (status: string) => {
     const isActive = status === "active";
     return (
-      <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border ${
-          isActive
-            ? "bg-green-500/10 text-green-400 border-green-500/20"
-            : "bg-red-500/10 text-red-400 border-red-500/20"
-        }`}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            isActive ? "bg-green-400 animate-pulse" : "bg-red-400"
-          }`}
-        />
-        <span className="capitalize">{status}</span>
+      <span className={`capitalize text-xs font-semibold ${isActive ? "text-green-500" : "text-red-500"}`}>
+        {status}
       </span>
     );
   };
 
   const renderRoleBadge = (role: string) => {
-    switch (role) {
-      case "admin":
-        return (
-          <span className="inline-flex items-center rounded-md bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-400 border border-purple-500/20">
-            Admin
-          </span>
-        );
-      case "editor":
-        return (
-          <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-400 border border-blue-500/20">
-            Editor
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center rounded-md bg-neutral-500/10 px-2.5 py-1 text-xs font-semibold text-neutral-400 border border-neutral-800">
-            Viewer
-          </span>
-        );
-    }
+    return <span className="capitalize text-xs font-semibold text-neutral-300">{role}</span>;
   };
 
   useEffect(() => {
@@ -85,9 +54,9 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Flat Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300"
+        className="absolute inset-0 bg-black/60"
         onClick={() => {
           reset();
           onClose();
@@ -96,124 +65,96 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
 
       {/* Modal Card */}
       <div
-        className="relative z-10 w-full max-w-2xl rounded-3xl border border-neutral-800 bg-neutral-950/90 p-6 md:p-8 shadow-2xl backdrop-blur-md transition-all duration-300 scale-100"
+        className="relative z-10 w-full max-w-2xl rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-md"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800/60 pb-4 mb-6">
-          <h2 className="text-xl font-bold text-neutral-100 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+        <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-4">
+          <h2 className="text-lg font-bold text-neutral-100">
             {user ? "Edit User Account" : "Add New User Account"}
           </h2>
           <button
-            className="rounded-lg p-1.5 text-neutral-400 hover:text-neutral-100 hover:bg-neutral-900 border border-transparent hover:border-neutral-800 transition-all duration-150 cursor-pointer"
+            className="rounded-lg px-2 py-0.5 text-neutral-400 hover:text-neutral-100 cursor-pointer text-xl leading-none"
             onClick={() => {
               reset();
               onClose();
             }}
           >
-            <X size={16} />
+            &times;
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* First Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <UserIcon size={12} />
-                <span>First Name</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">First Name</label>
               <input
                 type="text"
                 placeholder="John"
                 {...register("firstName")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
               />
               {errors.firstName && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.firstName.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.firstName.message}</p>
               )}
             </div>
 
             {/* Last Name */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <UserIcon size={12} />
-                <span>Last Name</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">Last Name</label>
               <input
                 type="text"
                 placeholder="Doe"
                 {...register("lastName")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
               />
               {errors.lastName && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.lastName.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.lastName.message}</p>
               )}
             </div>
 
             {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <Mail size={12} />
-                <span>Email Address</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">Email Address</label>
               <input
                 type="email"
                 placeholder="john.doe@example.com"
                 {...register("email")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
               />
               {errors.email && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.email.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.email.message}</p>
               )}
             </div>
 
             {/* Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <Phone size={12} />
-                <span>Phone Number (Optional)</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">Phone Number (Optional)</label>
               <input
                 type="text"
-                placeholder="e.g. 555-0199"
+                placeholder="e.g. 5550199"
                 {...register("phone")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
               />
               {errors.phone && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.phone.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.phone.message}</p>
               )}
             </div>
 
             {/* Status */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <Info size={12} />
-                <span>Account Status</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">Account Status</label>
               {isStatusDisabled ? (
-                <div className="flex items-center h-[42px]">
+                <div className="flex items-center h-[38px] bg-neutral-950 border border-neutral-800 px-3 rounded-lg">
                   <input type="hidden" {...register("status")} />
                   {renderStatusPill(user?.status || "active")}
                 </div>
               ) : (
                 <select
                   {...register("status")}
-                  className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                  className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
                 >
                   <option value="">Select Status</option>
                   <option value="active">Active</option>
@@ -221,28 +162,22 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
                 </select>
               )}
               {errors.status && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.status.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.status.message}</p>
               )}
             </div>
 
             {/* Role */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <Info size={12} />
-                <span>System Role</span>
-              </label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-neutral-400">System Role</label>
               {isRoleDisabled ? (
-                <div className="flex items-center h-[42px]">
+                <div className="flex items-center h-[38px] bg-neutral-950 border border-neutral-800 px-3 rounded-lg">
                   <input type="hidden" {...register("role")} />
                   {renderRoleBadge(user?.role || "viewer")}
                 </div>
               ) : (
                 <select
                   {...register("role")}
-                  className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                  className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
                 >
                   <option value="">Select Role</option>
                   <option value="editor">Editor</option>
@@ -250,39 +185,30 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
                 </select>
               )}
               {errors.role && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.role.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.role.message}</p>
               )}
             </div>
 
             {/* Department */}
-            <div className="flex flex-col gap-1.5 md:col-span-2">
-              <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <Briefcase size={12} />
-                <span>Department Name (Optional)</span>
-              </label>
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label className="text-xs font-medium text-neutral-400">Department Name (Optional)</label>
               <input
                 type="text"
                 placeholder="e.g. Engineering, Sales"
                 {...register("department")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                className="w-full bg-neutral-950 border border-neutral-800 text-neutral-100 rounded-lg px-3 py-2 outline-none focus:border-indigo-650 transition-colors text-sm"
               />
               {errors.department && (
-                <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
-                  <BadgeAlert size={10} />
-                  {errors.department.message}
-                </p>
+                <p className="text-xs text-red-400 mt-0.5">{errors.department.message}</p>
               )}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-neutral-800/60">
+          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-neutral-800">
             <button
               type="button"
-              className="rounded-xl border border-neutral-850 bg-neutral-900 hover:bg-neutral-800 hover:text-neutral-100 text-neutral-300 font-semibold px-5 py-2.5 text-xs transition-all duration-150 cursor-pointer"
+              className="rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-850 hover:text-neutral-100 text-neutral-300 font-medium px-4 py-2 text-xs transition-colors cursor-pointer"
               onClick={() => {
                 reset();
               }}
@@ -291,7 +217,7 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold px-6 py-2.5 text-xs transition-all duration-150 shadow-md shadow-indigo-500/10 cursor-pointer"
+              className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 text-xs transition-colors cursor-pointer"
             >
               {user ? "Save Changes" : "Create Account"}
             </button>

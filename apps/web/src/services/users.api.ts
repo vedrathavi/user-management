@@ -27,8 +27,8 @@ const getErrorMessage = async (response: Response, fallback: string) => {
   }
 };
 
-const handleResponse = async (response: Response, fallback: string) => {
-  if (response.status === 401) {
+const handleResponse = async (response: Response, fallback: string, skipAuthCheck = false) => {
+  if (response.status === 401 && !skipAuthCheck) {
     window.dispatchEvent(new Event("auth-unauthorized"));
     throw new Error("Session expired. Please log in again.");
   }
@@ -90,7 +90,7 @@ export const loginUser = async (email: string, password: string): Promise<{ acce
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  return handleResponse(response, "Invalid credentials");
+  return handleResponse(response, "Invalid credentials", true);
 };
 
 export const registerUser = async (
@@ -104,7 +104,7 @@ export const registerUser = async (
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ firstName, lastName, email, password }),
   });
-  return handleResponse(response, "Registration failed");
+  return handleResponse(response, "Registration failed", true);
 };
 
 export const getMe = async (): Promise<User> => {

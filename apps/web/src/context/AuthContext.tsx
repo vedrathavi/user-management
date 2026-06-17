@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const loadUserProfile = useCallback(async () => {
+    setLoading(true);
     try {
       const profile = await getMe();
       setUser(profile);
@@ -58,16 +59,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [logout]);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const response = await loginUser(email, password);
-      localStorage.setItem("token", response.accessToken);
-      setToken(response.accessToken);
-      // Let the useEffect run loadUserProfile
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
+    const response = await loginUser(email, password);
+    localStorage.setItem("token", response.accessToken);
+    setToken(response.accessToken);
   };
 
   const register = async (firstName: string, lastName: string, email: string, password: string) => {

@@ -20,7 +20,12 @@ import { SeedAdminService } from './seed-admin.service';
       useFactory: (configService: ConfigService) => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get<number>('JWT_EXPIRES_IN') ?? 86400,
+          expiresIn: (() => {
+            const expires = configService.get<string | number>('JWT_EXPIRES_IN');
+            if (expires === undefined || expires === null) return 86400;
+            const parsed = Number(expires);
+            return isNaN(parsed) ? expires : parsed;
+          })() as any,
         },
       }),
     }),
