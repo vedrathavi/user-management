@@ -6,17 +6,25 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guard/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -32,13 +40,21 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Req() req: any,
+  ) {
+    return this.usersService.update(id, updateUserDto, req.user);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.usersService.delete(id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  delete(@Param('id') id: string, @Req() req: any) {
+    return this.usersService.delete(id, req.user);
   }
 
   @Post('search')

@@ -32,6 +32,17 @@ The frontend is a fully-featured user management dashboard that communicates dir
   - **Search inside filter**: Sub-string filtering of the dropdown option list locally.
 - **Shared UI Components**: `UserTable`, `UserForm`, `FilterMenu`, and `ConfirmDialog`.
 
+## Remember our rules:
+
+| Action       | Admin | Editor | Viewer |
+|-------------|:-----:|:------:|:------:|
+| View Users  | ✅ | ✅ | ✅ |
+| Create User | ✅ | ✅ | ❌ |
+| Update User | ✅ | ✅ | ❌ |
+| Delete User | ✅ | ❌ | ❌ |
+| Change Roles | ✅ | ❌ | ❌ |
+
+
 ### API
 
 The NestJS backend API handles persistence, query building, and dynamic metadata generation.
