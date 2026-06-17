@@ -3,6 +3,7 @@ import type { FilterValuesDto } from "../utils/filters";
 import { useState } from "react";
 import FilterMenu from "./FilterMenu";
 import { Filter, Edit, Trash2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
   users: User[];
@@ -33,6 +34,7 @@ const UserTable = ({
   onSort,
   sort,
 }: Props) => {
+  const { user: currentUser } = useAuth();
   const [openFilters, setOpenFilters] = useState<string | null>(null);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
 
@@ -198,25 +200,30 @@ const UserTable = ({
               <td className="p-2.5 text-center">
                 <div className="flex items-center justify-center gap-1.5">
                   {/* Edit Button */}
-                  <button
-                    className="p-2 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-150 cursor-pointer"
-                    onClick={() => {
-                      if (onEdit) onEdit(user);
-                    }}
-                    title="Edit User"
-                  >
-                    <Edit size={12} />
-                  </button>
+                  {currentUser && (currentUser.role === 'admin' || (currentUser.role === 'editor' && user.role !== 'admin') || user.id === currentUser.id) && (
+                    <button
+                      className="p-2 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 hover:border-neutral-700 transition-all duration-150 cursor-pointer"
+                      onClick={() => {
+                        if (onEdit) onEdit(user);
+                      }}
+                      title="Edit User"
+                    >
+                      <Edit size={12} />
+                    </button>
+                  )}
                   {/* Delete Button */}
-                  <button
-                    className="p-2 rounded-lg bg-red-950/10 border border-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-950/20 hover:border-red-900/40 transition-all duration-150 cursor-pointer"
-                    onClick={() => {
-                      if (onDelete) onDelete(user.id);
-                    }}
-                    title="Delete User"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {currentUser && currentUser.role === 'admin' && (
+                    <button
+                      disabled={user.id === currentUser.id}
+                      className="p-2 rounded-lg bg-red-950/10 border border-red-900/20 text-red-400 hover:text-red-300 hover:bg-red-950/20 hover:border-red-900/40 transition-all duration-150 disabled:opacity-40 disabled:hover:bg-red-950/10 disabled:hover:border-red-900/20 disabled:hover:text-red-400 disabled:cursor-not-allowed cursor-pointer"
+                      onClick={() => {
+                        if (onDelete) onDelete(user.id);
+                      }}
+                      title={user.id === currentUser.id ? "You cannot delete your own account" : "Delete User"}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

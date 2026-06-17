@@ -13,8 +13,10 @@ import {
   searchUsers,
   updateUser,
 } from "../services/users.api";
+import { useAuth } from "../context/AuthContext";
 
 const UsersPage = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -290,16 +292,18 @@ const UsersPage = () => {
             Manage system directories, user accounts, and credentials.
           </p>
         </div>
-        <button
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-500/15 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
-          onClick={() => {
-            setEditingUser(null);
-            setIsFormOpen(true);
-          }}
-        >
-          <Plus size={16} />
-          <span>Add User</span>
-        </button>
+        {currentUser?.role === 'admin' && (
+          <button
+            className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-500/15 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+            onClick={() => {
+              setEditingUser(null);
+              setIsFormOpen(true);
+            }}
+          >
+            <Plus size={16} />
+            <span>Add User</span>
+          </button>
+        )}
       </div>
 
       {/* Stats Cards Section */}

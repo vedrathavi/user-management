@@ -34,13 +34,30 @@ The frontend is a fully-featured user management dashboard that communicates dir
 
 ## Remember our rules:
 
-| Action       | Admin | Editor | Viewer |
-|-------------|:-----:|:------:|:------:|
-| View Users  | ✅ | ✅ | ✅ |
-| Create User | ✅ | ✅ | ❌ |
-| Update User | ✅ | ✅ | ❌ |
-| Delete User | ✅ | ❌ | ❌ |
-| Change Roles | ✅ | ❌ | ❌ |
+| Action | Admin | Editor | Viewer |
+| :--- | :---: | :---: | :---: |
+| View Users | ✅ | ✅ | ✅ |
+| Create User | ✅ | ❌ | ❌ |
+| Edit Name, Phone, Dept | ✅ | ✅ (Except Admins) | ✅ (Self Only) |
+| Edit Status | ✅ | ✅ (Except Admins) | ❌ |
+| Change Roles | ✅ (Except Self) | ❌ | ❌ |
+| Delete User | ✅ (Except Self) | ❌ | ❌ |
+
+## Authentication & Authorization
+
+The project implements a complete JWT-based Authentication and Role-Based Access Control (RBAC) authorization system:
+
+### Authentication Flow
+- **Registration (`/auth/register`)**: New users can register. The default role assigned is `viewer` and default status is `active`.
+- **Login (`/auth/login`)**: Users authenticate with credentials to receive a signed JWT access token.
+- **Session Verification (`/auth/me`)**: Returns the currently authenticated user's profile and system role, triggered automatically on page load or token refresh.
+- **Token Storage**: The JWT is saved in `localStorage`. All frontend API calls automatically attach `Authorization: Bearer <token>` to headers.
+- **Token Expiry**: Centralized 401 response handling automatically logs out the user and redirects to the login screen.
+
+### Client-Side RBAC Enforcement
+- **Viewer**: Sees no "Add User" or "Delete" actions. Can only click the "Edit" button on *their own row* to modify their profile details (Role and Status selections are disabled and rendered as read-only badges).
+- **Editor**: Sees the "Edit" button on all non-admin records (cannot edit Admins). Cannot delete users, change roles, or add new users.
+- **Admin**: Full read, update, delete, and create permissions (except cannot delete or demote themselves, and cannot promote/create additional admins).
 
 
 ### API

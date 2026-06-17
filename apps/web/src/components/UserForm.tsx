@@ -2,21 +2,71 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import UserSchema, { type UserFormData } from "../utils/userSchema";
-import { X, User, Mail, Phone, Briefcase, Info, BadgeAlert } from "lucide-react";
+import { X, User as UserIcon, Mail, Phone, Briefcase, Info, BadgeAlert } from "lucide-react";
+import type { User } from "@repo/types";
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
-  user?: UserFormData | null;
+  user?: User | null;
   onSubmit: (data: UserFormData) => void;
   onClose: () => void;
 }
 
 const UserForm = ({ user, onSubmit, onClose }: Props) => {
+  const { user: currentUser } = useAuth();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
   } = useForm<UserFormData>({ resolver: zodResolver(UserSchema) });
+
+  const isRoleDisabled = !!user && (currentUser?.role === "editor" || user.id === currentUser?.id);
+  const isStatusDisabled = currentUser?.role === "viewer" || (!!user && user.id === currentUser?.id);
+
+  const renderStatusPill = (status: string) => {
+    const isActive = status === "active";
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold border ${
+          isActive
+            ? "bg-green-500/10 text-green-400 border-green-500/20"
+            : "bg-red-500/10 text-red-400 border-red-500/20"
+        }`}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isActive ? "bg-green-400 animate-pulse" : "bg-red-400"
+          }`}
+        />
+        <span className="capitalize">{status}</span>
+      </span>
+    );
+  };
+
+  const renderRoleBadge = (role: string) => {
+    switch (role) {
+      case "admin":
+        return (
+          <span className="inline-flex items-center rounded-md bg-purple-500/10 px-2.5 py-1 text-xs font-semibold text-purple-400 border border-purple-500/20">
+            Admin
+          </span>
+        );
+      case "editor":
+        return (
+          <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-semibold text-blue-400 border border-blue-500/20">
+            Editor
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center rounded-md bg-neutral-500/10 px-2.5 py-1 text-xs font-semibold text-neutral-400 border border-neutral-800">
+            Viewer
+          </span>
+        );
+    }
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,7 +122,7 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
             {/* First Name */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <User size={12} />
+                <UserIcon size={12} />
                 <span>First Name</span>
               </label>
               <input
@@ -92,7 +142,7 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
             {/* Last Name */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-neutral-400 flex items-center gap-1.5">
-                <User size={12} />
+                <UserIcon size={12} />
                 <span>Last Name</span>
               </label>
               <input
@@ -155,14 +205,21 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
                 <Info size={12} />
                 <span>Account Status</span>
               </label>
-              <select
-                {...register("status")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
-              >
-                <option value="">Select Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
+              {isStatusDisabled ? (
+                <div className="flex items-center h-[42px]">
+                  <input type="hidden" {...register("status")} />
+                  {renderStatusPill(user?.status || "active")}
+                </div>
+              ) : (
+                <select
+                  {...register("status")}
+                  className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                >
+                  <option value="">Select Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              )}
               {errors.status && (
                 <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
                   <BadgeAlert size={10} />
@@ -177,15 +234,21 @@ const UserForm = ({ user, onSubmit, onClose }: Props) => {
                 <Info size={12} />
                 <span>System Role</span>
               </label>
-              <select
-                {...register("role")}
-                className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
-              >
-                <option value="">Select Role</option>
-                <option value="admin">Admin</option>
-                <option value="editor">Editor</option>
-                <option value="viewer">Viewer</option>
-              </select>
+              {isRoleDisabled ? (
+                <div className="flex items-center h-[42px]">
+                  <input type="hidden" {...register("role")} />
+                  {renderRoleBadge(user?.role || "viewer")}
+                </div>
+              ) : (
+                <select
+                  {...register("role")}
+                  className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-xl px-4 py-2.5 outline-none focus:border-indigo-500/50 transition-all duration-150 text-sm"
+                >
+                  <option value="">Select Role</option>
+                  <option value="editor">Editor</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+              )}
               {errors.role && (
                 <p className="text-xs text-red-400 flex items-center gap-1 mt-0.5">
                   <BadgeAlert size={10} />

@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -27,7 +28,11 @@ export class UsersService {
       throw new ForbiddenException('You cannot create an admin user');
     }
     try {
-      const user = this.userRepository.create(createUserDto);
+      const hashedPassword = await bcrypt.hash(createUserDto.email, 10);
+      const user = this.userRepository.create({
+        ...createUserDto,
+        password: hashedPassword,
+      });
 
       return await this.userRepository.save(user);
     } catch (error: unknown) {
@@ -57,13 +62,41 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto, currentUser: any) {
-    if (currentUser.sub === id && updateUserDto.role && updateUserDto.role !== 'admin') {
-      throw new ForbiddenException('You cannot change your own role');
-    }
     const user = await this.userRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException(`User not found`);
     }
+
+    // 0. Viewer can only edit themselves and cannot change role or status
+    if (currentUser.role === 'viewer') {
+      if (currentUser.sub !== id) {
+        throw new ForbiddenException('Viewers can only edit their own profile');
+      }
+      if (updateUserDto.role || updateUserDto.status) {
+        throw new ForbiddenException('Viewers cannot change role or status');
+      }
+    }
+
+    // 1. Editor cannot edit admin
+    if (currentUser.role === 'editor' && user.role === 'admin') {
+      throw new ForbiddenException('Editors cannot edit admin users');
+    }
+
+    // 2. Editor cannot change roles
+    if (currentUser.role === 'editor' && updateUserDto.role && updateUserDto.role !== user.role) {
+      throw new ForbiddenException('Editors cannot change roles');
+    }
+
+    // 3. User cannot change their own role (demote self)
+    if (currentUser.sub === id && updateUserDto.role && updateUserDto.role !== user.role) {
+      throw new ForbiddenException('You cannot change your own role');
+    }
+
+    // 4. Cannot create additional admins
+    if (updateUserDto.role === 'admin' && user.role !== 'admin') {
+      throw new ForbiddenException('You cannot assign the admin role');
+    }
+
     Object.assign(user, updateUserDto);
     return this.userRepository.save(user);
   }
