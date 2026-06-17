@@ -34,6 +34,7 @@ const UserTable = ({
   sort,
 }: Props) => {
   const [openFilters, setOpenFilters] = useState<string | null>(null);
+  const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
 
   const getSelectedValues = (field: string) => {
     return selectedFilters.find((filter) => filter.field === field)?.values ?? [];
@@ -89,7 +90,7 @@ const UserTable = ({
     const options = filterOptions[field] ?? [];
 
     return (
-      <th className="relative border border-neutral-800 p-2.5 text-xs font-semibold text-neutral-300">
+      <th className="relative border-x border-neutral-800 p-2.5 text-xs font-semibold text-neutral-300">
         <div className="flex items-center justify-between gap-2 px-1">
           <span
             className={`transition-colors duration-200 ${
@@ -102,7 +103,17 @@ const UserTable = ({
             className={`cursor-pointer rounded-lg p-1 transition-all duration-200 hover:bg-neutral-800 ${
               isFiltered ? "text-blue-400 bg-blue-500/10 border border-blue-500/20" : "text-neutral-500"
             }`}
-            onClick={() => setOpenFilters(openFilters === field ? null : field)}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const menuWidth = 256;
+              const top = rect.bottom + window.scrollY + 8;
+              let left = rect.right - menuWidth + window.scrollX;
+              if (left < window.scrollX) {
+                left = rect.left + window.scrollX;
+              }
+              setMenuCoords({ top, left });
+              setOpenFilters(openFilters === field ? null : field);
+            }}
           >
             <Filter size={11} className={isFiltered ? "fill-blue-500/10" : ""} />
           </button>
@@ -122,6 +133,7 @@ const UserTable = ({
           onClose={() => setOpenFilters(null)}
           onSort={onSort}
           sort={sort}
+          coords={menuCoords}
         />
       </th>
     );

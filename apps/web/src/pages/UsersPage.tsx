@@ -262,7 +262,7 @@ const UsersPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-[300px] flex flex-col items-center justify-center gap-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5 p-8">
+      <div className="min-h-[300px] h-full flex flex-col items-center justify-center gap-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5 p-8">
         <AlertCircle className="text-red-500 h-10 w-10" />
         <div>
           <h3 className="text-lg font-bold text-neutral-200">Error Loading Users</h3>
@@ -279,11 +279,11 @@ const UsersPage = () => {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 mx-auto">
+    <div className="w-full h-full flex flex-col gap-6 mx-auto">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-200">
             User Directory
           </h1>
           <p className="text-sm text-neutral-400 mt-1">

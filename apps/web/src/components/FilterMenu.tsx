@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { FilterValuesDto } from "../utils/filters";
 import { ArrowUp, ArrowDown, ChevronRight, ArrowLeft, Search } from "lucide-react";
 
@@ -16,6 +17,7 @@ interface FilterMenuProps {
   onClose: () => void;
   onSort?: (field: string) => void;
   sort?: { field: string; order: "ASC" | "DESC" } | undefined;
+  coords: { top: number; left: number } | null;
 }
 
 const operatorLabels: Record<string, string> = {
@@ -41,6 +43,7 @@ const FilterMenu = ({
   onClose,
   onSort,
   sort,
+  coords,
 }: FilterMenuProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [menuView, setMenuView] = useState<"main" | "textFilters" | "operatorInput" | "dateRange">("main");
@@ -66,9 +69,9 @@ const FilterMenu = ({
       setMenuView("main");
       setSearchTerm("");
     }
-  }, [isOpen, selectedFilters, field]);
+  }, [isOpen, selectedFilters, field, activeOperatorFilter, activeGteFilter, activeLteFilter]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !coords) return null;
 
   // Filter options based on local search term
   const filteredOptions = options.filter((option) =>
@@ -90,18 +93,21 @@ const FilterMenu = ({
   const handleApplyOperator = () => {
     onOperatorApply(field, selectedOperator, operatorValue);
     setMenuView("main");
+    onClose();
   };
 
   const handleClearOperator = () => {
     onOperatorClear(field);
     setOperatorValue("");
     setMenuView("main");
+    onClose();
   };
 
   const handleApplyDateRange = () => {
     onOperatorApply(field, "gte", fromDate);
     onOperatorApply(field, "lte", toDate);
     setMenuView("main");
+    onClose();
   };
 
   const handleClearDateRange = () => {
@@ -110,6 +116,7 @@ const FilterMenu = ({
     setFromDate("");
     setToDate("");
     setMenuView("main");
+    onClose();
   };
 
   const isCurrentSorted = sort?.field === field;
@@ -125,10 +132,13 @@ const FilterMenu = ({
         {onSort && (
           <div className="flex flex-col gap-1 border-b border-neutral-800 pb-2.5">
             <button
-              onClick={() => onSort(field)}
+              onClick={() => {
+                onSort(field);
+                onClose();
+              }}
               className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-neutral-800 cursor-pointer ${
                 isCurrentSorted && sort.order === "ASC"
-                  ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                  ? "bg-blue-600/20 text-indigo-400 border border-indigo-500/30"
                   : "text-neutral-400 hover:text-neutral-200"
               }`}
             >
@@ -136,10 +146,13 @@ const FilterMenu = ({
               <ArrowUp size={12} />
             </button>
             <button
-              onClick={() => onSort(field)}
+              onClick={() => {
+                onSort(field);
+                onClose();
+              }}
               className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-neutral-800 cursor-pointer ${
                 isCurrentSorted && sort.order === "DESC"
-                  ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                  ? "bg-blue-600/20 text-indigo-400 border border-indigo-500/30"
                   : "text-neutral-400 hover:text-neutral-200"
               }`}
             >
@@ -156,7 +169,7 @@ const FilterMenu = ({
               <button
                 onClick={() => setMenuView("dateRange")}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-neutral-800 cursor-pointer ${
-                  dateRangeActive ? "text-blue-400" : "text-neutral-400 hover:text-neutral-200"
+                  dateRangeActive ? "text-indigo-400" : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 <span>Date Range Filters...</span>
@@ -181,7 +194,7 @@ const FilterMenu = ({
               <button
                 onClick={() => setMenuView("textFilters")}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-200 hover:bg-neutral-800 cursor-pointer ${
-                  activeOperatorFilter ? "text-blue-400" : "text-neutral-400 hover:text-neutral-200"
+                  activeOperatorFilter ? "text-indigo-400" : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
                 <span>Text Filters...</span>
@@ -212,7 +225,7 @@ const FilterMenu = ({
             placeholder={`Search ${fieldLabel === "CreatedAt" ? "Dates" : "options"}...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 pl-8 pr-3 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition-all duration-200 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50"
+            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 pl-8 pr-3 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition-all duration-200 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50"
           />
         </div>
 
@@ -223,7 +236,7 @@ const FilterMenu = ({
               type="checkbox"
               checked={isAllSelected}
               onChange={handleSelectAllChange}
-              className="h-3.5 w-3.5 rounded border-neutral-700 bg-neutral-900 text-blue-600 accent-blue-500 focus:ring-0 focus:ring-offset-0"
+              className="h-3.5 w-3.5 rounded border-neutral-700 bg-neutral-900 text-indigo-650 accent-indigo-500 focus:ring-0 focus:ring-offset-0"
             />
             <span>Select All</span>
           </label>
@@ -247,7 +260,7 @@ const FilterMenu = ({
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => onToggle(field, option)}
-                    className="h-3.5 w-3.5 rounded border-neutral-700 bg-neutral-900 text-blue-600 accent-blue-500 focus:ring-0 focus:ring-offset-0"
+                    className="h-3.5 w-3.5 rounded border-neutral-700 bg-neutral-900 text-indigo-650 accent-indigo-500 focus:ring-0 focus:ring-offset-0"
                   />
                   <span className="truncate">{option || "(Empty)"}</span>
                 </label>
@@ -318,7 +331,7 @@ const FilterMenu = ({
             value={operatorValue}
             onChange={(e) => setOperatorValue(e.target.value)}
             placeholder="Type filter value..."
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs text-neutral-100 outline-none transition-all duration-200 focus:border-blue-500/50"
+            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs text-neutral-100 outline-none transition-all duration-200 focus:border-indigo-500/50"
             onKeyDown={(e) => {
               if (e.key === "Enter") handleApplyOperator();
             }}
@@ -333,7 +346,7 @@ const FilterMenu = ({
           </button>
           <button
             onClick={handleApplyOperator}
-            className="rounded-lg px-3 py-1.5 text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-all duration-150 cursor-pointer"
+            className="rounded-lg px-3 py-1.5 text-[10px] font-semibold bg-indigo-600 text-white hover:bg-indigo-550 transition-all duration-150 cursor-pointer"
           >
             Apply
           </button>
@@ -362,7 +375,7 @@ const FilterMenu = ({
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-xs text-neutral-100 outline-none focus:border-blue-500/50"
+              className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-xs text-neutral-100 outline-none focus:border-indigo-500/50"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -371,7 +384,7 @@ const FilterMenu = ({
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-xs text-neutral-100 outline-none focus:border-blue-500/50"
+              className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1 text-xs text-neutral-100 outline-none focus:border-indigo-500/50"
             />
           </div>
         </div>
@@ -384,7 +397,7 @@ const FilterMenu = ({
           </button>
           <button
             onClick={handleApplyDateRange}
-            className="rounded-lg px-3 py-1.5 text-[10px] font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-all duration-150 cursor-pointer"
+            className="rounded-lg px-3 py-1.5 text-[10px] font-semibold bg-indigo-600 text-white hover:bg-indigo-555 transition-all duration-150 cursor-pointer"
           >
             Apply
           </button>
@@ -393,19 +406,27 @@ const FilterMenu = ({
     );
   };
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop to close the menu when clicking outside */}
       <div className="fixed inset-0 z-40 bg-black/0" onClick={onClose} />
 
       {/* Menu Container */}
-      <div className="absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border border-neutral-800 bg-neutral-950/95 p-4 shadow-2xl backdrop-blur-md text-left normal-case font-normal text-neutral-200">
+      <div
+        style={{
+          position: "absolute",
+          top: coords.top,
+          left: coords.left,
+        }}
+        className="z-50 w-64 rounded-xl border border-neutral-800 bg-neutral-950/95 p-4 shadow-2xl backdrop-blur-md text-left normal-case font-normal text-neutral-200"
+      >
         {menuView === "main" && renderMainView()}
         {menuView === "textFilters" && renderTextFiltersList()}
         {menuView === "operatorInput" && renderOperatorInputView()}
         {menuView === "dateRange" && renderDateRangeView()}
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 
