@@ -93,4 +93,34 @@ export const applyFilters = (users: User[], filters: UserFilters) => {
             
         }
 
-); }
+    );
+}
+
+// backend filters
+
+export interface FilterValuesDto {
+    field: string;
+    values?: string[]; // for role and status, this will be an array of strings
+    operator?: string;
+    value?: string;
+}
+
+export interface SearchUsersRequest{
+    page: number;
+    pageSize: number;
+
+    sort?: {
+        field: string;
+        order: "ASC" | "DESC";
+    };
+
+    filters?: FilterValuesDto[];
+}
+
+export interface SearchUsersResponse{
+    rows: User[];
+    total: number;
+    page: number;
+    pageSize: number;
+    filterOptions: Record<string, string[]>;
+}   

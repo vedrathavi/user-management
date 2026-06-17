@@ -1,21 +1,72 @@
 # User Management
 
-This repo is a pnpm + Turborepo monorepo with two apps:
+This repository is a pnpm + Turborepo monorepo for a user management product. It currently contains:
 
-- [apps/web](apps/web): Vite + React + Tailwind frontend
-- [apps/api](apps/api): NestJS API
+- [apps/web](apps/web): a React + Vite + Tailwind user management dashboard
+- [apps/api](apps/api): a NestJS + TypeORM API for user CRUD operations
+- [packages/types](packages/types): shared TypeScript types used by both apps
 
-## From Scratch
+## What It Offers
+
+The project is centered around managing users with a table-driven UI and a REST API.
+
+- Create, edit, and delete users in the web app.
+- Filter users by name, email, department, phone, role, status, and created date range.
+- Validate user forms with `react-hook-form` and `zod`.
+- Persist users through a NestJS API backed by TypeORM and PostgreSQL.
+- Share user role and status types across the monorepo.
+
+## What Has Been Implemented So Far
+
+### Web App
+
+The frontend is a fully-featured user management dashboard that communicates directly with the NestJS backend API.
+
+- **User Listing & Pagination**: Displays users retrieved from the Postgres database.
+- **Dynamic Sorting & Pagination**: Sort by columns and paginated navigation.
+- **Create, Edit & Delete**: Modals with form validation and confirmation dialogs.
+- **Excel-Style Column Filtering**: Every column header (First Name, Last Name, Email, Phone, Role, Status, Department) features a dropdown filter menu that supports:
+  - **Dynamic Dropdown Options**: Fetched dynamically from database distinct values.
+  - **Cascading Options**: Filter dropdowns automatically narrow down based on active filters on other columns.
+  - **Select All / Clear All**: Easy batch checking/unchecking.
+  - **Search inside filter**: Sub-string filtering of the dropdown option list locally.
+- **Shared UI Components**: `UserTable`, `UserForm`, `FilterMenu`, and `ConfirmDialog`.
+
+### API
+
+The NestJS backend API handles persistence, query building, and dynamic metadata generation.
+
+- **`POST /users/search`**: Main search, pagination, and sorting endpoint that also compiles dynamic, cascading filter options for all columns.
+- **`GET /users/:id`**: Fetch single user.
+- **`POST /users`**: Create user with unique email constraint checking.
+- **`PATCH /users/:id`**: Update user details.
+- **`DELETE /users/:id`**: Delete user record.
+- **Postgres Integration**: Persistence backed by TypeORM and PostgreSQL.
+
+### Shared Types
+
+- `packages/types` defines the shared `User`, `UserRoles`, and `UserStatus` types.
+
+## Project Structure
+
+- Web users page: [apps/web/src/pages/UsersPage.tsx](apps/web/src/pages/UsersPage.tsx)
+- Web filtering logic: [apps/web/src/utils/filters.ts](apps/web/src/utils/filters.ts)
+- Web form schema: [apps/web/src/utils/userSchema.ts](apps/web/src/utils/userSchema.ts)
+- Web mock data: [apps/web/src/data/mockUsers.ts](apps/web/src/data/mockUsers.ts)
+- API users controller: [apps/api/src/users/users.controller.ts](apps/api/src/users/users.controller.ts)
+- API users service: [apps/api/src/users/users.service.ts](apps/api/src/users/users.service.ts)
+- API user entity: [apps/api/src/users/entities/user.entity.ts](apps/api/src/users/entities/user.entity.ts)
+
+## Getting Started
 
 1. Install Node.js 20 or newer.
-2. Make sure pnpm 10.34.1 is available. The repo is pinned to that version in [package.json](package.json).
-3. Install dependencies from the repo root:
+2. Install dependencies from the repository root.
 
 ```bash
 pnpm install
 ```
 
-4. Start both apps from the repo root:
+3. Start both apps from the repository root.
 
 ```bash
 pnpm dev
@@ -70,9 +121,25 @@ Starts only the API.
 
 ## What This Repo Does Right Now
 
-- The web app is a simple Tailwind-styled screen with a visible test card.
-- The API is a basic NestJS server with no database, migrations, or env setup yet.
-- There are no hidden setup steps beyond installing dependencies and running the root dev command.
+- **Web app (`apps/web`)**:
+	- React, Vite, and Tailwind-based dashboard.
+	- Connects to the NestJS API for server-side state (listing, creating, editing, and deleting users).
+	- Excel-style multi-select column filtering with local search, Select All, and cascading dropdown values.
+	- Client-side form validation with `react-hook-form` and `zod`.
+
+- **API (`apps/api`)**:
+	- NestJS backend with full PostgreSQL integration via TypeORM.
+	- Houses endpoints for search/filtering, creating, updating, and deleting users.
+	- Implements dynamic query building for SQL-level filtering and cascading distinct options extraction.
+
+- **Packages**:
+	- `packages/types` contains shared TypeScript types (`User`, `UserRoles`, `UserStatus`).
+
+## Quick Feature Map
+
+- Users page: `apps/web/src/pages/UsersPage.tsx` — manages table query state (page, sorting, filters) and orchestrates API calls.
+- Web filtering definitions: `apps/web/src/utils/filters.ts` — contains frontend types for search requests/responses.
+- Form validation/schema: `apps/web/src/utils/userSchema.ts` — Zod schema for validation.
 
 ## Where the Wiring Lives
 
