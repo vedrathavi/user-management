@@ -4,7 +4,6 @@ import UserTable from "../components/UserTable";
 import UserForm from "../components/UserForm";
 import type { UserFormData } from "../utils/userSchema";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { Plus, ChevronLeft, ChevronRight, Users, CheckCircle, AlertCircle, Sparkles, FilterX } from "lucide-react";
 
 import { type SearchUsersRequest } from "../utils/filters";
 import {
@@ -13,8 +12,10 @@ import {
   searchUsers,
   updateUser,
 } from "../services/users.api";
+import { useAuth } from "../context/AuthContext";
 
 const UsersPage = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -235,7 +236,6 @@ const UsersPage = () => {
     setDeleteUserId(id);
   };
 
-  // modal handlers
   const confirmDelete = async () => {
     if (!deleteUserId) return;
     try {
@@ -262,8 +262,7 @@ const UsersPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-[300px] h-full flex flex-col items-center justify-center gap-4 text-center rounded-2xl border border-red-500/20 bg-red-500/5 p-8">
-        <AlertCircle className="text-red-500 h-10 w-10" />
+      <div className="min-h-[300px] h-full flex flex-col items-center justify-center gap-4 text-center rounded-xl border border-red-500/20 bg-red-500/5 p-8">
         <div>
           <h3 className="text-lg font-bold text-neutral-200">Error Loading Users</h3>
           <p className="text-sm text-neutral-400 mt-1">{error}</p>
@@ -279,78 +278,32 @@ const UsersPage = () => {
   }
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 mx-auto">
+    <div className="w-full h-full flex flex-col gap-4 mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-200">
+          <h1 className="text-xl font-bold text-neutral-200">
             User Directory
           </h1>
-          <p className="text-sm text-neutral-400 mt-1">
-            Manage system directories, user accounts, and credentials.
+          <p className="text-xs text-neutral-400 mt-0.5">
+            Manage user accounts, roles, and status fields.
           </p>
         </div>
-        <button
-          className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-500/15 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
-          onClick={() => {
-            setEditingUser(null);
-            setIsFormOpen(true);
-          }}
-        >
-          <Plus size={16} />
-          <span>Add User</span>
-        </button>
-      </div>
-
-      {/* Stats Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 backdrop-blur-sm">
-          <div className="rounded-xl bg-blue-500/10 p-3 text-blue-400">
-            <Users size={20} />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-400 font-medium">Total Matches</p>
-            <h3 className="text-xl font-bold text-neutral-100">{total}</h3>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 backdrop-blur-sm">
-          <div className="rounded-xl bg-green-500/10 p-3 text-green-400">
-            <CheckCircle size={20} />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-400 font-medium">Active (Page)</p>
-            <h3 className="text-xl font-bold text-neutral-100">
-              {users.filter((u) => u.status === "active").length}
-            </h3>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 backdrop-blur-sm">
-          <div className="rounded-xl bg-red-500/10 p-3 text-red-400">
-            <AlertCircle size={20} />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-400 font-medium">Inactive (Page)</p>
-            <h3 className="text-xl font-bold text-neutral-100">
-              {users.filter((u) => u.status === "inactive").length}
-            </h3>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-4 backdrop-blur-sm">
-          <div className="rounded-xl bg-purple-500/10 p-3 text-purple-400">
-            <Sparkles size={20} />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-400 font-medium">Active Filters</p>
-            <h3 className="text-xl font-bold text-neutral-100">{(tableQuery.filters ?? []).length}</h3>
-          </div>
-        </div>
+        {currentUser?.role === 'admin' && (
+          <button
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg text-xs transition-colors cursor-pointer"
+            onClick={() => {
+              setEditingUser(null);
+              setIsFormOpen(true);
+            }}
+          >
+            Add User
+          </button>
+        )}
       </div>
 
       {/* Main Table Card */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/10 backdrop-blur-sm p-4 md:p-6 shadow-xl flex flex-col gap-4">
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 md:p-6 shadow-md flex flex-col gap-4">
         {/* Table Top Actions */}
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-neutral-200">
@@ -359,7 +312,7 @@ const UsersPage = () => {
           {/* clear filters */}
           {(tableQuery.filters ?? []).length > 0 && (
             <button
-              className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-neutral-200 py-1.5 px-3 rounded-lg hover:bg-neutral-800/60 transition-colors cursor-pointer"
+              className="text-xs text-neutral-400 hover:text-neutral-200 py-1.5 px-3 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
               onClick={() => {
                 setTableQuery((prev) => ({
                   ...prev,
@@ -368,8 +321,7 @@ const UsersPage = () => {
                 }));
               }}
             >
-              <FilterX size={14} />
-              <span>Clear Filters</span>
+              Clear Filters
             </button>
           )}
         </div>
@@ -399,7 +351,7 @@ const UsersPage = () => {
         </div>
 
         {/* Pagination Block */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 pt-4 border-t border-neutral-800/60 text-xs text-neutral-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2 pt-4 border-t border-neutral-800 text-xs text-neutral-400">
           <div>
             Showing <span className="font-semibold text-neutral-200">{total === 0 ? 0 : (tableQuery.page - 1) * tableQuery.pageSize + 1}</span> to{" "}
             <span className="font-semibold text-neutral-200">{Math.min(tableQuery.page * tableQuery.pageSize, total)}</span> of{" "}
@@ -408,7 +360,7 @@ const UsersPage = () => {
 
           <div className="flex items-center gap-2">
             <button
-              className="flex items-center justify-center p-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-900 disabled:hover:text-neutral-400 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-neutral-950 border border-neutral-850 hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-950 disabled:hover:text-neutral-450 disabled:cursor-not-allowed transition-colors cursor-pointer text-xs font-medium"
               disabled={tableQuery.page <= 1}
               onClick={() => {
                 setTableQuery((prev) => ({
@@ -417,15 +369,15 @@ const UsersPage = () => {
                 }));
               }}
             >
-              <ChevronLeft size={14} />
+              Prev
             </button>
             
-            <span className="px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-lg text-neutral-300 font-semibold text-[10px]">
+            <span className="px-3 py-1.5 bg-neutral-950 border border-neutral-850 rounded-lg text-neutral-300 font-semibold text-[10px]">
               Page {tableQuery.page} of {Math.ceil(total / tableQuery.pageSize) || 1}
             </span>
 
             <button
-              className="flex items-center justify-center p-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-900 disabled:hover:text-neutral-400 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-neutral-950 border border-neutral-850 hover:bg-neutral-800 hover:text-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-950 disabled:hover:text-neutral-450 disabled:cursor-not-allowed transition-colors cursor-pointer text-xs font-medium"
               disabled={tableQuery.page * tableQuery.pageSize >= total}
               onClick={() => {
                 setTableQuery((prev) => ({
@@ -434,7 +386,7 @@ const UsersPage = () => {
                 }));
               }}
             >
-              <ChevronRight size={14} />
+              Next
             </button>
           </div>
         </div>

@@ -46,4 +46,9 @@ export class User {
     nullable: true,
   })
   department!: string;
+
+  @Column({
+    select: false,
+  })
+  password!: string;
 }
